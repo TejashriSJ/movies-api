@@ -1,5 +1,5 @@
 import express from "express";
-import movies from "./routs/movies.js";
+import movies from "./routes/movies.js";
 import createError from "http-errors";
 
 const app = express();
