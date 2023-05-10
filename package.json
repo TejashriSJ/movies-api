@@ -1,0 +1,30 @@
+{
+  "name": "movies-api-tejashri",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app",
+    "dev": "nodemon app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/TejashriSJ/movies-api-tejashri.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/TejashriSJ/movies-api-tejashri/issues"
+  },
+  "homepage": "https://gitlab.com/TejashriSJ/movies-api-tejashri#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-errors": "^2.0.0",
+    "mysql": "^2.18.1"
+  }
+}
