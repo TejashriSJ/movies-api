@@ -68,18 +68,24 @@ router.get("/api/movies/:movieId", (req, res, next) => {
 router.post("/api/movies", (req, res, next) => {
   let sql = `INSERT into movies set ?`;
 
-  console.log(typeof req.body);
-
   if (
     typeof req.body !== "object" ||
     Array.isArray(req.body) ||
     Object.keys(req.body).length === 0
   ) {
     next(formatError(400, "Body should be object and it should not be empty"));
+  } else if (
+    Object.values(req.body).filter((value) => {
+      return value === "" || value === " ";
+    }).length > 0
+  ) {
+    next(
+      formatError(422, "Check the values Provided values should not be empty")
+    );
   } else {
     connection.query(sql, req.body, (err, result) => {
       if (err) {
-        console.error(err, "error in adding a new movie");
+        console.error(err.code, "error in adding a new movie");
         if (
           err.code === "ER_BAD_FIELD_ERROR" ||
           err.code === "WARN_DATA_TRUNCATED" ||
@@ -88,9 +94,20 @@ router.post("/api/movies", (req, res, next) => {
           next(
             formatError(
               422,
-              `Unable to process the given data check the fields provided`
+              `Unable to process the given data check the fields and values provided`
             )
           );
+        } else if (err.code === "ER_DUP_ENTRY") {
+          next(
+            formatError(
+              422,
+              "Duplicate ID, provide different ID or remove the ID field"
+            )
+          );
+        } else if (err.code === "ER_NO_DEFAULT_FOR_FIELD") {
+          next(formatError(422, "Provide all the fields"));
+        } else if (err.code === "UNKNOWN_CODE_PLEASE_REPORT") {
+          next(formatError(422, "Rating should be between 0 and 10"));
         } else {
           next(formatError(500, `Unable to add new movie data`));
         }
@@ -114,6 +131,14 @@ router.put("/api/movies/:movieId", (req, res, next) => {
     Object.keys(newData).length === 0
   ) {
     next(formatError(400, "Body should be object and it should not be empty"));
+  } else if (
+    Object.values(req.body).filter((value) => {
+      return value === "" || value === " ";
+    }).length > 0
+  ) {
+    next(
+      formatError(422, "Check the values Provided values should not be empty")
+    );
   } else {
     let dataForUpdate = Object.keys(newData).reduce((dataString, key) => {
       dataString += `${key} = "${newData[key]}",`;
@@ -127,10 +152,23 @@ router.put("/api/movies/:movieId", (req, res, next) => {
     connection.query(sql, (err, result) => {
       if (err) {
         console.error(err, "error in updating data");
-        next(formatError(500, `Unable to update id ${movie_id} movie data`));
+        if (
+          err.code === "ER_BAD_FIELD_ERROR" ||
+          err.code === "WARN_DATA_TRUNCATED" ||
+          err.code === "ER_TRUNCATED_WRONG_VALUE_FOR_FIELD"
+        ) {
+          next(
+            formatError(
+              422,
+              `Unable to process the given data check the fields and values provided`
+            )
+          );
+        } else if (err.code === "UNKNOWN_CODE_PLEASE_REPORT") {
+          next(formatError(422, "Rating should be between 0 and 10"));
+        } else {
+          next(formatError(500, `Unable to update id ${movie_id} movie data`));
+        }
       } else {
-        console.log(result);
-        console.log(result.affectedRows);
         if (result.affectedRows === 0) {
           next(formatError(400, `Id not matched with the present data `));
         } else {
