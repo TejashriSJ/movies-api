@@ -4,13 +4,10 @@ import mysql from "mysql";
 const router = express.Router();
 
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USERNAME || "tejashri",
-  password: process.env.DB_PASSWORD || "Teju@123",
-  database: process.env.DB_DBNAME || "movies_db",
-  waitForConnections: true,
-  connectinLimit: 10,
-  queueLimit: 0,
+  host: "bwurplvdgvvvwpnranif-mysql.services.clever-cloud.com",
+  user: "udqqzprkaengukj7",
+  password: "EOs778HMHx1GmqWriFwH",
+  database: "bwurplvdgvvvwpnranif",
 });
 connection.connect((err) => {
   if (err) {
