@@ -11,6 +11,9 @@ const connection = mysql.createConnection({
   user: process.env.DB_USERNAME || "tejashri",
   password: process.env.DB_PASSWORD || "Teju@123",
   database: process.env.DB_DBNAME || "movies_db",
+  waitForConnections: true,
+  connectinLimit: 10,
+  queueLimit: 0,
 });
 
 connection.connect((err) => {
