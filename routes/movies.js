@@ -25,6 +25,11 @@ const formatError = (statusCode, messageForClient) => {
   return error;
 };
 
+// home page
+router.get("/", (req, res, next) => {
+  res.json({ Message: "Home Page" });
+});
+
 // Get all movies
 router.get("/api/movies", (req, res, next) => {
   let sql = `SELECT * from movies`;
