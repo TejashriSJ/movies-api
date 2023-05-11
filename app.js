@@ -6,7 +6,17 @@ import mysql from "mysql";
 const app = express();
 
 // create connection
-const connection = mysql.createConnection({
+// const connection = mysql.createConnection({
+//   host: process.env.DB_HOST || "localhost",
+//   user: process.env.DB_USERNAME || "tejashri",
+//   password: process.env.DB_PASSWORD || "Teju@123",
+//   database: process.env.DB_DBNAME || "movies_db",
+//   waitForConnections: true,
+//   connectinLimit: 10,
+//   queueLimit: 0,
+// });
+
+const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USERNAME || "tejashri",
   password: process.env.DB_PASSWORD || "Teju@123",
@@ -15,8 +25,7 @@ const connection = mysql.createConnection({
   connectinLimit: 10,
   queueLimit: 0,
 });
-
-connection.connect((err) => {
+pool.getConnection((err) => {
   if (err) {
     console.error("error in connecting: ", err);
   } else {
