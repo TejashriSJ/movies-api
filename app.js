@@ -1,37 +1,8 @@
 import express from "express";
 import movies from "./routes/movies.js";
 import createError from "http-errors";
-import mysql from "mysql";
 
 const app = express();
-
-// create connection
-// const connection = mysql.createConnection({
-//   host: process.env.DB_HOST || "localhost",
-//   user: process.env.DB_USERNAME || "tejashri",
-//   password: process.env.DB_PASSWORD || "Teju@123",
-//   database: process.env.DB_DBNAME || "movies_db",
-//   waitForConnections: true,
-//   connectinLimit: 10,
-//   queueLimit: 0,
-// });
-
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USERNAME || "tejashri",
-  password: process.env.DB_PASSWORD || "Teju@123",
-  database: process.env.DB_DBNAME || "movies_db",
-  waitForConnections: true,
-  connectinLimit: 10,
-  queueLimit: 0,
-});
-pool.getConnection((err) => {
-  if (err) {
-    console.error("error in connecting: ", err);
-  } else {
-    console.log("connected to data base");
-  }
-});
 
 app.use(express.json());
 

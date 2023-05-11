@@ -3,14 +3,15 @@ import mysql from "mysql";
 
 const router = express.Router();
 
-// create connection
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "tejashri",
-  password: "Teju@123",
-  database: "movies_db",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USERNAME || "tejashri",
+  password: process.env.DB_PASSWORD || "Teju@123",
+  database: process.env.DB_DBNAME || "movies_db",
+  waitForConnections: true,
+  connectinLimit: 10,
+  queueLimit: 0,
 });
-
 connection.connect((err) => {
   if (err) {
     console.error("error in connecting: ", err);
