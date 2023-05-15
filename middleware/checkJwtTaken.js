@@ -1,16 +1,12 @@
 import jwt from "jsonwebtoken";
-import connection from "../config/connection.js";
+import dotenv from "dotenv";
 
-const formatError = (statusCode, messageForClient) => {
-  let error = {
-    status: statusCode,
-    messageObj: { status: "Error", Message: messageForClient },
-  };
-  return error;
-};
+import connection from "../config/connection.js";
+import formatError from "../utils/formatError.js";
+
+dotenv.config();
 
 const checkJwtTokens = (req, res, next) => {
-  console.log("inside middleware");
   let authorisationHeader = req.headers["authorization"];
 
   if (authorisationHeader === undefined) {
@@ -25,7 +21,7 @@ const checkJwtTokens = (req, res, next) => {
     if (token === undefined) {
       next(formatError(401, "Invalid access token"));
     } else if (
-      jwt.verify(token, "secrete-key", (err, payload) => {
+      jwt.verify(token, process.env.SECRET_KEY, (err, payload) => {
         if (err) {
           console.log(err, "Error in verifying token");
           next(formatError(401, "Unauthorised access token"));
@@ -46,12 +42,6 @@ const checkJwtTokens = (req, res, next) => {
               }
             }
           );
-
-          //   if (req.username === payload.username) {
-          //     next();
-          //   } else {
-          //     next(formatError(401, "Unauthorised access token"));
-          //   }
         }
       })
     ) {

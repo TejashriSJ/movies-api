@@ -1,8 +1,8 @@
 import express from "express";
-import movies from "./routes/movies.js";
-import users from "./routes/users.js";
 import createError from "http-errors";
 
+import movies from "./routes/movies.js";
+import users from "./routes/users.js";
 import checkJwtTokens from "./middleware/checkJwtTaken.js";
 
 const app = express();
@@ -26,7 +26,6 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err);
   res.status(err.status || 500);
   res.json(err.messageObj || { status: "Error" });
 });

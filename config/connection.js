@@ -1,10 +1,12 @@
 import mysql from "mysql";
+import dotenv from "dotenv";
+dotenv.config();
 
 const connection = mysql.createPool({
-  host: "bwurplvdgvvvwpnranif-mysql.services.clever-cloud.com",
-  user: "udqqzprkaengukj7",
-  password: "EOs778HMHx1GmqWriFwH",
-  database: "bwurplvdgvvvwpnranif",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   // host: "localhost",
   // user: "tejashri",
   // password: "Teju@123",
