@@ -6,7 +6,7 @@ const validateAddMovierequest = (req, res, next) => {
   if (validationResult(req).errors.length > 0) {
     let addMovieError = formatError(400, "Invalid input fields");
     addMovieError.messageObj.format = {
-      Title: "a string of alphabets, may contain space",
+      Title: "a string of alphabets, may contain space inbetween",
       Description: " a string",
       Runtime: "a positive integer",
       Genre: "string of alphabets",

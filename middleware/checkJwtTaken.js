@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-import connection from "../config/connection.js";
+import sqlQuery from "../utils/sqlQuery.js";
 import formatError from "../utils/formatError.js";
 
 dotenv.config();
@@ -26,22 +26,20 @@ const checkJwtTokens = (req, res, next) => {
           console.log(err, "Error in verifying token");
           next(formatError(401, "Unauthorised access token"));
         } else {
-          console.log(req.username, payload.username);
           req.username = payload.username;
 
-          connection.query(
-            `select role from users inner join roles on users.role_id = roles.id where username = "${payload.username}" `,
-            (err, result) => {
-              if (err) {
-                console.error(err, "Error in getting role");
-                next(err);
-              } else {
-                req.role = result[0].role;
-                console.log(result[0].role);
-                next();
-              }
-            }
-          );
+          let sql = `select role from users inner join roles on users.role_id = roles.id where username = ? `;
+          let parameters = payload.username;
+
+          sqlQuery(sql, parameters)
+            .then((result) => {
+              req.role = result[0].role;
+              next();
+            })
+            .catch((err) => {
+              console.error(err, "error in getting role");
+              next(err);
+            });
         }
       })
     ) {
