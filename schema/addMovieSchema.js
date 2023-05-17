@@ -12,6 +12,14 @@ const addMovieSchema = [
   body("Director").isAlpha("en-IN", { ignore: " " }),
   body("Actor").isAlpha("en-IN", { ignore: " " }),
   body("Year").isInt({ min: 1000 }),
+  body().custom((value, { req }) => {
+    const bodyLength = Object.keys(req.body).length;
+    if (bodyLength === 11) {
+      return true;
+    } else {
+      throw new Error("Invalid body length");
+    }
+  }),
 ];
 
 export default addMovieSchema;

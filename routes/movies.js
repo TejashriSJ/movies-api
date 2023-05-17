@@ -9,15 +9,18 @@ import validateMovieId from "../middleware/validateMovieId.js";
 import addMovieSchema from "../schema/addMovieSchema.js";
 import validateAddMovierequest from "../middleware/validateAddMovieRequest.js";
 
+import updateMovieSchema from "../schema/updateMovieSchema.js";
+import validateUpdateMovieRequest from "../middleware/validateUpdateMovieRequest.js";
+
 import checkAuthorization from "../middleware/checkAuthorization.js";
 
 const router = express.Router();
 
 // Get all movies
 router.get("/", (req, res, next) => {
-  let sql = `SELECT * from movies`;
+  let getMoviesQuery = `SELECT * from movies`;
 
-  sqlQuery(sql)
+  sqlQuery(getMoviesQuery)
     .then((results) => {
       res.json({ movies: results });
     })
@@ -31,10 +34,10 @@ router.get("/", (req, res, next) => {
 router.get("/:movieId", movieIdSchema, validateMovieId, (req, res, next) => {
   const movie_id = req.params.movieId;
   // SQL Injection
-  let sql = `SELECT * from movies where id = ? `;
+  let getMovieQuery = `SELECT * from movies where id = ? `;
   let parameters = movie_id;
 
-  sqlQuery(sql, parameters)
+  sqlQuery(getMovieQuery, parameters)
     .then((result) => {
       if (result.length === 0) {
         next(formatError(400, `No data for given id ${movie_id}`));
@@ -55,13 +58,13 @@ router.post(
   addMovieSchema,
   validateAddMovierequest,
   (req, res, next) => {
-    let sql = `INSERT into movies set ?`;
+    let addMovieQuery = `INSERT into movies set ?`;
 
-    sqlQuery(sql, req.body)
+    sqlQuery(addMovieQuery, req.body)
       .then((result) => {
-        let sql = `SELECT * from movies where id = ?`;
+        let getMovieQuery = `SELECT * from movies where id = ?`;
 
-        return sqlQuery(sql, result.insertId);
+        return sqlQuery(getMovieQuery, result.insertId);
       })
       .then((result) => {
         res.json({
@@ -83,21 +86,21 @@ router.put(
   checkAuthorization,
   movieIdSchema,
   validateMovieId,
-  addMovieSchema,
-  validateAddMovierequest,
+  updateMovieSchema,
+  validateUpdateMovieRequest,
   (req, res, next) => {
     let movie_id = req.params.movieId;
 
-    let sql = `UPDATE movies set ? where id = ?`;
+    let updateMovieQuery = `UPDATE movies set ? where id = ?`;
     let parameters = [req.body, movie_id];
 
-    sqlQuery(sql, parameters)
+    sqlQuery(updateMovieQuery, parameters)
       .then((result) => {
         if (result.affectedRows === 0) {
           next(formatError(400, `Id not matched with the present data `));
         } else {
-          let sql = `SELECT * from movies where id = ?`;
-          return sqlQuery(sql, movie_id);
+          let getMovieQuery = `SELECT * from movies where id = ?`;
+          return sqlQuery(getMovieQuery, movie_id);
         }
       })
       .then((result) => {
@@ -126,16 +129,15 @@ router.delete(
 
     let movieToBeDeleted = {};
 
-    let sql = `SELECT * from movies where id = ?`;
-    sqlQuery(sql, movie_id)
+    let getMovieQuery = `SELECT * from movies where id = ?`;
+    sqlQuery(getMovieQuery, movie_id)
       .then((result) => {
-        console.log(result, "result");
         if (result.length === 0) {
           next(formatError(400, `Id not matched with the present data`));
         } else {
           movieToBeDeleted = result;
-          let sql = `DELETE from movies where id = ? `;
-          sqlQuery(sql, movie_id)
+          let deleteMovieQuery = `DELETE from movies where id = ? `;
+          sqlQuery(deleteMovieQuery, movie_id)
             .then(() => {
               res.send({
                 status: "success",
