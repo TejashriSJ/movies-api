@@ -8,7 +8,9 @@ import validateSignUpRequest from "../middleware/validateSignUpRequest.js";
 import validateSignInRequest from "../middleware/validateSignInRequest.js";
 import signUpSchema from "../schema/signUpSchema.js";
 import signInSchema from "../schema/signInSchema.js";
-import sqlQuery from "../utils/sqlQuery.js";
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 dotenv.config();
 
@@ -19,55 +21,54 @@ router.post(
   "/signup",
   signUpSchema,
   validateSignUpRequest,
-  (req, res, next) => {
-    const { name, username, password, email } = req.body;
-    const hashedpassword = bcrypt.hashSync(password, 8);
+  async (req, res, next) => {
+    try {
+      const { name, username, password, email } = req.body;
+      const hashedpassword = await bcrypt.hash(password, 8);
 
-    let sql = `SELECT username,password,email from users`;
+      const users = await prisma.users.findMany();
 
-    sqlQuery(sql)
-      .then((results) => {
-        let fieldsToValidate = {
-          allUserNames: [],
-          allEmails: [],
-        };
-        fieldsToValidate = results.reduce((accumulator, result) => {
-          accumulator.allEmails.push(result.email);
+      let fieldsToValidate = {
+        allUserNames: [],
+        allEmails: [],
+      };
+      fieldsToValidate = users.reduce((accumulator, user) => {
+        accumulator.allEmails.push(user.email);
 
-          accumulator.allUserNames.push(result.username);
+        accumulator.allUserNames.push(user.username);
 
-          return accumulator;
-        }, fieldsToValidate);
+        return accumulator;
+      }, fieldsToValidate);
+      if (fieldsToValidate.allEmails.includes(email)) {
+        next(formatError(422, "Email ID already exist"));
+      } else if (fieldsToValidate.allUserNames.includes(username)) {
+        next(formatError(422, "User name already exist"));
+      } else {
+        const usersAferInserted = await prisma.users.create({
+          data: {
+            name: name,
+            username: username,
+            password: hashedpassword,
+            email: email,
+            role_id: 1,
+          },
+        });
 
-        if (fieldsToValidate.allEmails.includes(email)) {
-          next(formatError(422, "Email ID already exist"));
-        } else if (fieldsToValidate.allUserNames.includes(username)) {
-          next(formatError(422, "User name already exist"));
-        } else {
-          let sql = `INSERT into users (name,username,password,email,role_id) values (?,?,?,?,?)`;
-          let parameters = [name, username, hashedpassword, email, 1];
-
-          sqlQuery(sql, parameters)
-            .then((result) => {
-              let sql = `SELECT id,name,username,email from users where id = ?`;
-
-              return sqlQuery(sql, result.insertId);
-            })
-            .then((result) => {
-              res.json({
-                Message: "Registered Successfully",
-                userDetals: result,
-              });
-            })
-            .catch((err) => {
-              next(err);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error(err, "Error in adding user data");
-        next(err);
-      });
+        console.log(usersAferInserted, "usersAfterInserted");
+        res.json({
+          Message: "Registered Successfully",
+          userDetals: {
+            id: usersAferInserted.id,
+            name: usersAferInserted.name,
+            username: usersAferInserted.username,
+            email: usersAferInserted.email,
+          },
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   }
 );
 
@@ -76,46 +77,46 @@ router.post(
   "/signin",
   signInSchema,
   validateSignInRequest,
-  (req, res, next) => {
-    const { username, password } = req.body;
+  async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
 
-    let sql = `SELECT username , password ,id,name,email from users where BINARY username  = ?`;
-
-    sqlQuery(sql, username)
-      .then((result) => {
-        if (result.length === 0) {
-          next(
-            formatError(
-              401,
-              "User not registered, sign up here /api/auth/signup"
-            )
-          );
-        } else if (!bcrypt.compareSync(password, result[0].password)) {
-          next(formatError(401, "Password not matched"));
-        } else {
-          let jwt_token = jwt.sign(
-            { username: username },
-            process.env.SECRET_KEY,
-            {
-              expiresIn: 86400,
-            }
-          );
-          res.json({
-            message: "Login successfull",
-            details: {
-              id: result[0].id,
-              name: result[0].name,
-              username: result[0].username,
-              email: result[0].email,
-            },
-            jwt_token: jwt_token,
-          });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        next(err);
+      const user = await prisma.users.findUnique({
+        where: {
+          username: username,
+        },
       });
+      console.log(user, "user");
+
+      if (user.length === 0) {
+        next(
+          formatError(401, "User not registered, sign up here /api/auth/signup")
+        );
+      } else if (!(await bcrypt.compare(password, user.password))) {
+        next(formatError(401, "Password not matched"));
+      } else {
+        let jwt_token = jwt.sign(
+          { username: username },
+          process.env.SECRET_KEY,
+          {
+            expiresIn: 86400,
+          }
+        );
+        res.json({
+          message: "Login successfull",
+          details: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+          },
+          jwt_token: jwt_token,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   }
 );
 

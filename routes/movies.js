@@ -11,42 +11,47 @@ import validateAddMovierequest from "../middleware/validateAddMovieRequest.js";
 
 import checkAuthorization from "../middleware/checkAuthorization.js";
 
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
 const router = express.Router();
 
 // Get all movies
-router.get("/", (req, res, next) => {
-  let sql = `SELECT * from movies`;
+router.get("/", async (req, res, next) => {
+  try {
+    const movies = await prisma.movies.findMany();
 
-  sqlQuery(sql)
-    .then((results) => {
-      res.json({ movies: results });
-    })
-    .catch((err) => {
-      console.error(err);
-      next(err);
-    });
+    res.json({ movies: movies });
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
 });
 
 // Get the movies with given id
-router.get("/:movieId", movieIdSchema, validateMovieId, (req, res, next) => {
-  const movie_id = req.params.movieId;
-  // SQL Injection
-  let sql = `SELECT * from movies where id = ? `;
-  let parameters = movie_id;
-
-  sqlQuery(sql, parameters)
-    .then((result) => {
-      if (result.length === 0) {
+router.get(
+  "/:movieId",
+  movieIdSchema,
+  validateMovieId,
+  async (req, res, next) => {
+    try {
+      const movie_id = req.params.movieId;
+      const movie = await prisma.movies.findUnique({
+        where: {
+          id: Number(movie_id),
+        },
+      });
+      if (!movie) {
         next(formatError(400, `No data for given id ${movie_id}`));
       } else {
-        res.json(result);
+        res.json(movie);
       }
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error(err);
       next(err);
-    });
-});
+    }
+  }
+);
 
 //Add a new movie
 router.post(
@@ -54,26 +59,20 @@ router.post(
   checkAuthorization,
   addMovieSchema,
   validateAddMovierequest,
-  (req, res, next) => {
-    let sql = `INSERT into movies set ?`;
-
-    sqlQuery(sql, req.body)
-      .then((result) => {
-        let sql = `SELECT * from movies where id = ?`;
-
-        return sqlQuery(sql, result.insertId);
-      })
-      .then((result) => {
-        res.json({
-          status: "success",
-          message: "Movie added",
-          addedMovie: result,
-        });
-      })
-      .catch((err) => {
-        console.error(err, "error in adding a new movie");
-        next(err);
+  async (req, res, next) => {
+    try {
+      const insertedMovie = await prisma.movies.create({
+        data: req.body,
       });
+      res.json({
+        status: "success",
+        message: "Movie added",
+        addedMovie: insertedMovie,
+      });
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   }
 );
 
@@ -85,32 +84,32 @@ router.put(
   validateMovieId,
   addMovieSchema,
   validateAddMovierequest,
-  (req, res, next) => {
-    let movie_id = req.params.movieId;
+  async (req, res, next) => {
+    try {
+      const movie_id = req.params.movieId;
 
-    let sql = `UPDATE movies set ? where id = ?`;
-    let parameters = [req.body, movie_id];
-
-    sqlQuery(sql, parameters)
-      .then((result) => {
-        if (result.affectedRows === 0) {
-          next(formatError(400, `Id not matched with the present data `));
-        } else {
-          let sql = `SELECT * from movies where id = ?`;
-          return sqlQuery(sql, movie_id);
-        }
-      })
-      .then((result) => {
+      const checkIdExist = await prisma.movies.findUnique({
+        where: { id: Number(movie_id) },
+      });
+      if (checkIdExist) {
+        const updatedMovie = await prisma.movies.update({
+          where: {
+            id: Number(movie_id),
+          },
+          data: req.body,
+        });
         res.json({
           status: "success",
           message: "Movie data updated",
-          updatedMovie: result,
+          updatedMovie: updatedMovie,
         });
-      })
-      .catch((err) => {
-        console.error(err);
-        next(err);
-      });
+      } else {
+        next(formatError(400, `Id not matched with the present data `));
+      }
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   }
 );
 
@@ -121,38 +120,31 @@ router.delete(
   checkAuthorization,
   movieIdSchema,
   validateMovieId,
-  (req, res, next) => {
-    const movie_id = req.params.movieId;
+  async (req, res, next) => {
+    try {
+      const movie_id = req.params.movieId;
 
-    let movieToBeDeleted = {};
-
-    let sql = `SELECT * from movies where id = ?`;
-    sqlQuery(sql, movie_id)
-      .then((result) => {
-        console.log(result, "result");
-        if (result.length === 0) {
-          next(formatError(400, `Id not matched with the present data`));
-        } else {
-          movieToBeDeleted = result;
-          let sql = `DELETE from movies where id = ? `;
-          sqlQuery(sql, movie_id)
-            .then(() => {
-              res.send({
-                status: "success",
-                message: "movie deleted",
-                deletedMovie: movieToBeDeleted,
-              });
-            })
-            .catch((err) => {
-              console.error(err);
-              next(err);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        next(err);
+      const checkIdExist = await prisma.movies.findUnique({
+        where: { id: Number(movie_id) },
       });
+      if (checkIdExist) {
+        const deletedMovie = await prisma.movies.delete({
+          where: {
+            id: Number(movie_id),
+          },
+        });
+        res.send({
+          status: "success",
+          message: "movie deleted",
+          deletedMovie: deletedMovie,
+        });
+      } else {
+        next(formatError(400, `Id not matched with the present data `));
+      }
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   }
 );
 
