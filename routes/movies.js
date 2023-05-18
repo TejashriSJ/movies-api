@@ -1,6 +1,6 @@
 import express from "express";
 
-import sqlQuery from "../utils/sqlQuery.js";
+//import sqlQuery from "../utils/sqlQuery.js";
 import formatError from "../utils/formatError.js";
 
 import movieIdSchema from "../schema/movieIdSchema.js";
@@ -8,6 +8,9 @@ import validateMovieId from "../middleware/validateMovieId.js";
 
 import addMovieSchema from "../schema/addMovieSchema.js";
 import validateAddMovierequest from "../middleware/validateAddMovieRequest.js";
+
+import updateMovieSchema from "../schema/updateMovieSchema.js";
+import validateUpdateMovieRequest from "../middleware/validateUpdateMovieRequest.js";
 
 import checkAuthorization from "../middleware/checkAuthorization.js";
 
@@ -82,8 +85,8 @@ router.put(
   checkAuthorization,
   movieIdSchema,
   validateMovieId,
-  addMovieSchema,
-  validateAddMovierequest,
+  updateMovieSchema,
+  validateUpdateMovieRequest,
   async (req, res, next) => {
     try {
       const movie_id = req.params.movieId;

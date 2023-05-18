@@ -50,7 +50,7 @@ router.post(
             username: username,
             password: hashedpassword,
             email: email,
-            role_id: 1,
+            role_id: 2,
           },
         });
 
@@ -88,7 +88,7 @@ router.post(
       });
       console.log(user, "user");
 
-      if (user.length === 0) {
+      if (!user) {
         next(
           formatError(401, "User not registered, sign up here /api/auth/signup")
         );

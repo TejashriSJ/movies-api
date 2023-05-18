@@ -6,7 +6,7 @@ import users from "./routes/users.js";
 import checkJwtTokens from "./middleware/checkJwtTaken.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 

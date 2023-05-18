@@ -2,6 +2,7 @@ import formatError from "../utils/formatError.js";
 
 const checkAuthorization = (req, res, next) => {
   const role = req.role;
+  console.log(role, "role");
   if (role === "admin") {
     next();
   } else {
